@@ -58,7 +58,7 @@ const NYCZipcodeHeatMap: React.FC<NYCZipcodeHeatMapProps> = ({
   useEffect(() => {
     fetchGeoJson();
     handleDataRefresh();
-  }, [fetchData, handleDataRefresh]);
+  }, [fetchData, handleDataRefresh, fetchGeoJson]);
 
 
   const plotData = [{

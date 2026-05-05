@@ -1,142 +1,116 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react';
-import Plot from 'react-plotly.js';
+import React, { useCallback, useMemo } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Brush, CartesianGrid } from 'recharts';
+import useContainerWidth from '../hooks/useContainerWidth';
 
-type YearRange = [number, number];
-
-interface YearValue {
-  year: number;
+interface MonthCount {
+  ym: number;    // YYYYMM integer, e.g. 201503
+  month: number; // 1-12
   value: number;
 }
 
-interface YearRangeBarChartProps {
-  title: string;
-  selectedRange: YearRange;
-  onRangeChange: (range: YearRange) => void;
-  fetchData: () => Promise<YearValue[]>;
+interface Props {
+  data: MonthCount[];
+  selectedRange: [number, number]; // ym values
+  onRangeChange: (range: [number, number]) => void;
 }
 
-const selectorOptions = {
-  buttons: [
-    {
-      step: "all",
-      stepmode: "todate",
-      value: 1,
-      label: "All"
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const CHART_HEIGHT = 300;
+
+export default function RangeSweepBarChart({ data, selectedRange, onRangeChange }: Props) {
+  const { ref, width } = useContainerWidth();
+
+  const handleBrushChange = useCallback(
+    (range: { startIndex?: number; endIndex?: number }) => {
+      if (range.startIndex !== undefined && range.endIndex !== undefined && data.length > 0) {
+        onRangeChange([data[range.startIndex].ym, data[range.endIndex].ym]);
+      }
     },
-    {
-      step: "month",
-      stepmode: "backward",
-      value: 1,
-      label: "1 Month"
-    },
-    {
-      step: "year",
-      stepmode: "backward",
-      value: 1,
-      label: "1 Year"
+    [data, onRangeChange],
+  );
+
+  // Map selected ym range to brush indices
+  const startIndex = useMemo(() => {
+    const idx = data.findIndex((d) => d.ym >= selectedRange[0]);
+    return idx >= 0 ? idx : 0;
+  }, [data, selectedRange]);
+
+  const endIndex = useMemo(() => {
+    for (let i = data.length - 1; i >= 0; i--) {
+      if (data[i].ym <= selectedRange[1]) return i;
     }
-  ]
-};
+    return Math.max(0, data.length - 1);
+  }, [data, selectedRange]);
 
-
-const RangeSweepBarChart: React.FC<YearRangeBarChartProps> = ({ title, selectedRange, onRangeChange, fetchData }) => {
-  const [yearData, setYearData] = useState<YearValue[]>([]);
-
-  useEffect(() => {
-    const initialFetch = async () => {
-      const data = await fetchData();
-      setYearData(data);
-    }
-    initialFetch();
-  }, [fetchData]);
-
-  const handleRelayout = useCallback((event: Readonly<Plotly.PlotRelayoutEvent>) => {
-    if (event['xaxis.range'] !== undefined) {
-
-      const newRange: YearRange = [
-        Number(event['xaxis.range'][0]),
-        Number(event['xaxis.range'][1])
-      ];
-      onRangeChange(newRange);
-    } else if (event['xaxis.range[0]'] !== undefined && event['xaxis.range[1]'] !== undefined) {
-
-      const newRange: YearRange = [
-        Number(event['xaxis.range[0]']),
-        Number(event['xaxis.range[1]'])
-      ];
-      onRangeChange(newRange);
-    }
-  }, [onRangeChange]);
+  // Only show tick marks at January of each year
+  const yearTicks = useMemo(
+    () => data.filter((d) => d.month === 1).map((d) => d.ym),
+    [data],
+  );
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="text-sm text-gray-600">
-          Years Selected: {Math.floor(selectedRange?.[0] + 0.5)} - {Math.floor(selectedRange?.[1] + 0.5)}
+    <div ref={ref} style={{ minHeight: CHART_HEIGHT }}>
+      {data.length === 0 ? (
+        <div className="h-[300px] flex items-center justify-center text-muted-foreground text-sm animate-pulse">
+          Loading chart&hellip;
         </div>
-      </div>
-      <Plot
-        data={[
-          {
-            type: 'bar',
-            x: yearData.map(d => d.year),
-            y: yearData.map(d => d.value),
-            marker: {
-              color: '#3b82f6',
-              opacity: 0.8
-            },
-            hovertemplate: 'Year: %{x}<br>Count: %{y}<extra></extra>'
-          }
-        ]}
-        layout={{
-          title: {
-            text: title,
-            font: {
-              size: 20
-            }
-          },
-          xaxis: {
-            title: 'Year',
-            range: selectedRange,
-            type: 'linear',
-            tickmode: 'linear',
-            dtick: 1,
-            fixedrange: true, // Make x-axis static
-            // @ts-expect-error: not sure why step isn't the expected type
-            rangeselector: selectorOptions,
-            rangeslider: {}
-          },
-          yaxis: {
-            title: 'Count',
-            fixedrange: true // Prevent y-axis zooming
-          },
-          margin: { t: 50, r: 20, b: 40, l: 60 },
-          showlegend: false
-        }}
-        config={{
-          displayModeBar: true,
-          displaylogo: false,
-          modeBarButtonsToRemove: [
-            'lasso2d',
-            'pan2d',
-            'zoom2d',
-            'autoScale2d',
-            'hoverClosestCartesian',
-            'hoverCompareCartesian',
-            'toggleSpikelines',
-            'select2d',
-            'toImage',
-          ],
-          responsive: true
-        }}
-        style={{ width: '100%', height: '300px' }}
-        onRelayout={handleRelayout}
-      />
+      ) : width > 0 ? (
+        <BarChart width={width} height={CHART_HEIGHT} data={data}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 18%)" vertical={false} />
+          <XAxis
+            dataKey="ym"
+            ticks={yearTicks}
+            tickFormatter={(ym: number) => String(Math.floor(ym / 100))}
+            stroke="hsl(0 0% 40%)"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            stroke="hsl(0 0% 40%)"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v))}
+          />
+          <Tooltip
+            contentStyle={{
+              background: 'hsl(0 0% 7%)',
+              border: '1px solid hsl(0 0% 20%)',
+              borderRadius: '8px',
+              fontSize: '13px',
+            }}
+            labelStyle={{ color: 'hsl(0 0% 55%)' }}
+            itemStyle={{ color: 'hsl(0 0% 90%)' }}
+            formatter={(value) => [Number(value).toLocaleString(), 'Complaints']}
+            labelFormatter={(label) => {
+              const ym = Number(label);
+              const month = ym % 100;
+              const year = Math.floor(ym / 100);
+              return `${MONTHS[month - 1]} ${year}`;
+            }}
+            cursor={{ fill: 'hsl(0 0% 100% / 0.04)' }}
+          />
+          <Bar dataKey="value" fill="hsl(217.2 91.2% 59.8%)" radius={[2, 2, 0, 0]} />
+          <Brush
+            dataKey="ym"
+            height={30}
+            fill="hsl(0 0% 5%)"
+            stroke="hsl(0 0% 25%)"
+            startIndex={startIndex}
+            endIndex={endIndex}
+            onChange={handleBrushChange}
+            travellerWidth={8}
+            tickFormatter={(ym: number) => {
+              const month = ym % 100;
+              const year = Math.floor(ym / 100);
+              return `${MONTHS[month - 1]} '${String(year).slice(2)}`;
+            }}
+          />
+        </BarChart>
+      ) : null}
     </div>
   );
-};
-
-
-export default RangeSweepBarChart;
+}

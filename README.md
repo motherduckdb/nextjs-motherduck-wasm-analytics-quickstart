@@ -4,7 +4,7 @@ This is a [Next.js](https://nextjs.org) app using the MotherDuck storage backend
 
 A minimal starter template can be found [here](https://github.com/MotherDuck-Open-Source/nextjs-motherduck-wasm-analytics-quickstart-minimal).
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FMotherDuck-Open-Source%2Fnextjs-motherduck-wasm-analytics-quickstart.git&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22motherduck%22%2C%22productSlug%22%3A%22motherduck%22%7D%5D)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmotherduckdb%2Fnextjs-motherduck-wasm-analytics-quickstart.git&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22motherduck%22%2C%22productSlug%22%3A%22motherduck%22%7D%5D)
 
 
 ## Getting Started

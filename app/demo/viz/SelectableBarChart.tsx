@@ -61,7 +61,6 @@ const SelectableBarChart: React.FC<HorizontalBarChartProps> = ({
           font: {
             size: 20
           },
-          // @ts-expect-error: subtitle should be a valid property
           subtitle: { text: subtitle, font: { size: 10 } }
         },
         xaxis: {

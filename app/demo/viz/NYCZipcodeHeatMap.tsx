@@ -62,7 +62,7 @@ const NYCZipcodeHeatMap: React.FC<NYCZipcodeHeatMapProps> = ({
 
 
   const plotData = [{
-    type: 'choroplethmapbox',
+    type: 'choroplethmap',
     geojson: geoJson,
     locations: data.map(d => d.zipcode),
     z: data.map(d => d.value),
@@ -86,7 +86,7 @@ const NYCZipcodeHeatMap: React.FC<NYCZipcodeHeatMapProps> = ({
         size: 20
       },
     },
-    mapbox: {
+    map: {
       style: 'open-street-map',
       center: mapView.center,
       zoom: mapView.zoom
@@ -114,7 +114,7 @@ const NYCZipcodeHeatMap: React.FC<NYCZipcodeHeatMapProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* @ts-expect-error: missing type defs for mapbox */}
+      {/* @ts-expect-error: missing type defs for the maplibre map layout */}
       <Plot
         title={title}
         data={plotData}
@@ -122,8 +122,8 @@ const NYCZipcodeHeatMap: React.FC<NYCZipcodeHeatMapProps> = ({
         config={config}
         style={{ width: '100%', height: '600px' }}
         onRelayout={(e: PlotRelayoutEvent) => {
-          const newCenter = e['mapbox.center' as keyof PlotRelayoutEvent] as { lat: number, lon: number } | undefined;
-          const newZoom = e['mapbox.zoom' as keyof PlotRelayoutEvent] as number | undefined;
+          const newCenter = e['map.center' as keyof PlotRelayoutEvent] as { lat: number, lon: number } | undefined;
+          const newZoom = e['map.zoom' as keyof PlotRelayoutEvent] as number | undefined;
 
 
           // Update state when map is panned/zoomed

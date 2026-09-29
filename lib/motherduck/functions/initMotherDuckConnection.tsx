@@ -21,6 +21,7 @@ export default async function initMotherDuckConnection(mdToken: string, database
         }
 
         const _connection = motherduckWasmModule.MDConnection.create({ mdToken });
+        await _connection.isInitialized();
 
         if (database) {
             await _connection.evaluateQuery(`USE ${database}`)

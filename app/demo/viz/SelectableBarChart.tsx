@@ -1,91 +1,84 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
-import Plot from 'react-plotly.js';
+import React from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
+import useContainerWidth from '../hooks/useContainerWidth';
 
 interface BarData {
   label: string;
   value: number;
 }
 
-interface HorizontalBarChartProps {
-  title: string;
-  subtitle: string;
-  fetchData: () => Promise<BarData[]>;
+interface Props {
+  data: BarData[];
   onBarClick: (label: string | null) => void;
   selectedBar: string | null;
 }
 
-const SelectableBarChart: React.FC<HorizontalBarChartProps> = ({
-  title,
-  subtitle,
-  fetchData,
-  onBarClick,
-  selectedBar
-}) => {
-  const [barData, setBarData] = useState<BarData[]>([]);
+const CHART_HEIGHT = 320;
 
-  useEffect(() => {
-    const initialFetch = async () => {
-      const data = await fetchData();
-      setBarData(data);
-    }
-    initialFetch();
-  }, [fetchData]);
-
-
-
-  const handlePlotClick = (event: Readonly<Plotly.PlotMouseEvent>) => {
-    const clickedLabel = event.points && event.points[0] && event.points[0].y ? event.points[0].y.valueOf() as string : null;
-    onBarClick(clickedLabel || null);
-  };
+export default function SelectableBarChart({ data, onBarClick, selectedBar }: Props) {
+  const { ref, width } = useContainerWidth();
 
   return (
-    <Plot
-      data={[
-        {
-          type: 'bar',
-          x: barData.map(d => d.value),
-          y: barData.map(d => d.label),
-          orientation: 'h',
-          marker: {
-            color: barData.map(d => (d.label === selectedBar ? '#3b82f6' : '#6b7280')),
-            opacity: 0.8
-          },
-          hovertemplate: '%{y}: %{x}<extra></extra>'
-        }
-      ]}
-      layout={{
-        title: {
-          text: title,
-          font: {
-            size: 20
-          },
-          // @ts-expect-error: subtitle should be a valid property
-          subtitle: { text: subtitle, font: { size: 10 } }
-        },
-        xaxis: {
-          title: 'Value',
-          fixedrange: true // Prevent x-axis zooming
-        },
-        yaxis: {
-          title: 'Category',
-          type: 'category',
-          autorange: 'reversed',
-          fixedrange: true
-        },
-        margin: { t: 70, r: 20, b: 40, l: 180 },
-        bargap: 0.1,
-        clickmode: 'event'
-      }}
-      config={{
-        displayModeBar: false,
-        responsive: true,
-      }}
-      onClick={handlePlotClick}
-      style={{ width: '100%', height: '350px' }}
-    />
+    <div ref={ref} style={{ minHeight: CHART_HEIGHT }}>
+      {data.length === 0 ? (
+        <div className="h-[320px] flex items-center justify-center text-muted-foreground text-sm animate-pulse">
+          Loading chart&hellip;
+        </div>
+      ) : width > 0 ? (
+        <BarChart width={width} height={CHART_HEIGHT} data={data} layout="vertical">
+          <XAxis
+            type="number"
+            stroke="hsl(0 0% 40%)"
+            fontSize={12}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v))}
+          />
+          <YAxis
+            dataKey="label"
+            type="category"
+            width={150}
+            tick={{ fontSize: 11, fill: 'hsl(0 0% 55%)' }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <Tooltip
+            contentStyle={{
+              background: 'hsl(0 0% 7%)',
+              border: '1px solid hsl(0 0% 20%)',
+              borderRadius: '8px',
+              fontSize: '13px',
+            }}
+            itemStyle={{ color: 'hsl(0 0% 90%)' }}
+            formatter={(value) => [Number(value).toLocaleString(), 'Complaints']}
+            cursor={{ fill: 'hsl(0 0% 100% / 0.04)' }}
+          />
+          <Bar
+            dataKey="value"
+            cursor="pointer"
+            radius={[0, 3, 3, 0]}
+            onClick={(_data, index) => {
+              const clicked = data[index];
+              if (clicked) {
+                onBarClick(clicked.label === selectedBar ? null : clicked.label);
+              }
+            }}
+          >
+            {data.map((entry) => (
+              <Cell
+                key={entry.label}
+                fill={
+                  entry.label === selectedBar
+                    ? 'hsl(217.2 91.2% 59.8%)'
+                    : 'hsl(0 0% 28%)'
+                }
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      ) : null}
+    </div>
   );
-};
-
-export default SelectableBarChart;
+}

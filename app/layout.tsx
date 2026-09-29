@@ -1,7 +1,8 @@
 import { MotherDuckClientProvider } from "@/lib/motherduck/context/motherduckClientContext";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
-import Link from "next/link";
+import Image from "next/image";
+import { ArrowUpRight } from "lucide-react";
 import "./globals.css";
 
 const geistSans = localFont({
@@ -16,8 +17,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Create App with MotherDuck Wasm",
-  description: "Build an application with MotherDuck Wasm",
+  title: "MotherDuck WASM Demo",
+  description: "Interactive analytics powered by MotherDuck WASM and Next.js",
 };
 
 export default function RootLayout({
@@ -26,33 +27,58 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen flex flex-col antialiased bg-white dark:bg-gray-900 text-black dark:text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans min-h-screen flex flex-col antialiased`}
       >
-
-        <div className="flex flex-col min-h-screen">
-          <main className="flex-1 w-full">
-            <div className="w-full">
-              <h1 className="text-2xl font-bold mb-4 px-4 py-2"><Link href="/">Next.js MotherDuck Starter</Link></h1>
-              {/* use the sample_data database */}
-              <MotherDuckClientProvider database="sample_data">
-                {children}
-              </MotherDuckClientProvider>
-            </div>
-          </main>
-          <footer className="justify-center border-t text-center text-xs gap-8 py-4 bg-white dark:bg-gray-900">
-            <p>
-              Powered by{" "}
-              <a href="https://motherduck.com" target="_blank" className="font-bold hover:underline" rel="noreferrer">
-                MotherDuck
+        <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="max-w-6xl mx-auto flex h-14 items-center justify-between px-4">
+            <Image
+              src="/motherduck_logo.png"
+              alt="MotherDuck"
+              width={140}
+              height={28}
+              priority
+            />
+            <nav className="flex items-center gap-1 sm:gap-2">
+              <a
+                href="https://github.com/motherduckdb/nextjs-motherduck-wasm-analytics-quickstart"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 font-mono text-xs uppercase tracking-wider transition-colors"
+              >
+                Repo
+                <ArrowUpRight aria-hidden="true" className="size-3.5" />
               </a>
-            </p>
-          </footer>
-        </div>
+              <a
+                href="https://motherduck.com/docs/sql-reference/wasm-client/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 rounded-md px-3 py-1.5 font-mono text-xs uppercase tracking-wider transition-colors hover:bg-accent"
+              >
+                Docs
+              </a>
+            </nav>
+          </div>
+        </header>
+        <main className="flex-1">
+          <MotherDuckClientProvider database="sample_data">
+            {children}
+          </MotherDuckClientProvider>
+        </main>
+        <footer className="border-t border-border py-4 text-center text-xs text-muted-foreground">
+          Powered by{" "}
+          <a
+            href="https://motherduck.com"
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-foreground hover:underline"
+          >
+            MotherDuck
+          </a>{" "}
+          WASM Client &mdash; data cached and queried entirely in your browser
+        </footer>
       </body>
-
-
     </html>
   );
 }

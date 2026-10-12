@@ -34,7 +34,7 @@ export default function RootLayout({
         <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="max-w-6xl mx-auto flex h-14 items-center justify-between px-4">
             <Image
-              src="/motherduck_logo.png"
+              src="/motherduck_logo_dark.png"
               alt="MotherDuck"
               width={140}
               height={28}
